@@ -71,7 +71,7 @@ def _env_bool(key: str, default: bool) -> bool:
     return val.lower() in ("true", "1", "yes")
 
 # ── Load .env file from project root if it exists ──────────────────
-_env_file = Path(__file__).parent / ".env"
+_env_file = Path(__file__).parents[1] / ".env"
 if _env_file.exists():
     with open(_env_file, "r", encoding="utf-8") as f:
         for line in f:
@@ -272,7 +272,8 @@ DEFAULT_CONFIG = {
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _config_path() -> Path:
-    return Path(__file__).parent / CONFIG_FILE
+    # Write config to project root, not src/
+    return Path(__file__).parents[1] / CONFIG_FILE
 
 
 def load_config() -> dict:
@@ -429,7 +430,7 @@ def compute_file_hash(filepath: Path, chunk_size: int = 8192) -> str:
 
 
 def load_cache() -> dict:
-    p = Path(__file__).parent / CACHE_FILE
+    p = Path(__file__).parents[1] / CACHE_FILE
     if p.exists():
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -440,12 +441,12 @@ def load_cache() -> dict:
 
 
 def save_cache(cache_data: dict) -> None:
-    with open(Path(__file__).parent / CACHE_FILE, "w", encoding="utf-8") as f:
+    with open(Path(__file__).parents[1] / CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(cache_data, f, ensure_ascii=False, indent=2)
 
 
 def load_batch_status() -> dict:
-    p = Path(__file__).parent / BATCH_STATUS_FILE
+    p = Path(__file__).parents[1] / BATCH_STATUS_FILE
     if p.exists():
         try:
             with open(p, "r", encoding="utf-8") as f:
@@ -456,7 +457,7 @@ def load_batch_status() -> dict:
 
 
 def save_batch_status(status: dict) -> None:
-    with open(Path(__file__).parent / BATCH_STATUS_FILE, "w", encoding="utf-8") as f:
+    with open(Path(__file__).parents[1] / BATCH_STATUS_FILE, "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=2)
 
 
@@ -1474,7 +1475,7 @@ def _shutdown_handler(sig, frame):
     # Clean up leftover chunk directories
     import glob as _glob
     import shutil as _shutil
-    for d in _glob.glob(str(Path(__file__).parent / "*" / "*_chunks")):
+    for d in _glob.glob(str(Path(__file__).parents[1] / "*" / "*_chunks")):
         try:
             _shutil.rmtree(d, ignore_errors=True)
         except Exception:

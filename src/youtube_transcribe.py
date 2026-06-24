@@ -47,7 +47,7 @@ def _env_float(key: str, default: float) -> float:
     except (ValueError, TypeError):
         return default
 
-_env_file = Path(__file__).parent / ".env"
+_env_file = Path(__file__).parents[1] / ".env"
 if _env_file.exists():
     with open(_env_file, "r", encoding="utf-8") as f:
         for line in f:

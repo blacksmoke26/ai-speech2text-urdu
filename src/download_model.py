@@ -16,7 +16,7 @@ from pathlib import Path
 def _env_str(key: str, default: str) -> str:
     return os.environ.get(key, default)
 
-_env_file = Path(__file__).parent / ".env"
+_env_file = Path(__file__).parents[1] / ".env"
 if _env_file.exists():
     with open(_env_file, "r", encoding="utf-8") as f:
         for line in f:

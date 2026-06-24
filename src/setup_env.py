@@ -54,9 +54,9 @@ def main():
         print("        Install from: https://www.python.org/downloads/release/python-3119/")
         sys.exit(1)
 
-    # --- Paths ---
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    venv_dir = os.path.join(script_dir, "venv")
+    # --- Paths (project root, not src/) ---
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    venv_dir = os.path.join(project_root, "venv")
     venv_python = os.path.join(venv_dir, "Scripts", "python.exe")
 
     # --- Create venv ---
@@ -95,14 +95,14 @@ def main():
     print("[OK]  All dependencies installed.")
 
     # ── Create youtube_downloads directory if it doesn't exist ────────
-    ytdl_dir = os.path.join(script_dir, "youtube_downloads")
+    ytdl_dir = os.path.join(project_root, "youtube_downloads")
     if not os.path.exists(ytdl_dir):
         os.makedirs(ytdl_dir)
         print(f"[OK]  Created youtube_downloads/ directory.")
 
     # ── Create .env from .env.sample if .env doesn't exist ───────────
-    env_sample = os.path.join(script_dir, ".env.sample")
-    env_file = os.path.join(script_dir, ".env")
+    env_sample = os.path.join(project_root, ".env.sample")
+    env_file = os.path.join(project_root, ".env")
     if os.path.exists(env_sample) and not os.path.exists(env_file):
         with open(env_sample, "r", encoding="utf-8") as src:
             content = src.read()
