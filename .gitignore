@@ -1,0 +1,66 @@
+# ── Virtual Environment ─────────────────────────────────────
+venv/
+Scripts/
+Include/
+Lib/
+pyvenv.cfg
+
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+out/
+
+# ── Hugging Face / Model Cache (large binary downloads) ────
+.hf_cache/
+*.bin
+*.safetensors
+config.json
+model.safetensors
+
+# ── Audio / Video files (large binary blobs) ───────────────
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+*.mp4
+*.webm
+*.aac
+*.mka
+*.rar
+!samples/sample.mp3
+!samples/sample.txt
+youtube_downloads/
+.trash/
+
+# ── Transcription artifacts (auto-generated, per-machine) ──
+.transcribe_cache.json
+transcribe_config.json
+.batch_status.json
+transcription_output.txt
+crash-report.txt
+*.log
+
+# ── OS files ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+
+# ── IDE / Editor ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Environment configuration ──────────────────────────────
+.env
+.env.local
+.env.*.local

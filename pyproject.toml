@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "urdu-audio2text"
+version = "0.1.0"
+description = "Urdu Speech-to-Text using fine-tuned Whisper model (kingabzpro/whisper-large-v3-turbo-urdu)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    "tqdm>=4.65.0",
+    "transformers>=4.40.0",
+    "accelerate>=0.30.0",
+    "librosa>=0.10.0",
+    "soundfile>=0.12.1",
+    "tf-keras>=3.0.0",
+    "yt-dlp>=2024.0.0",
+    "python-docx>=1.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+urdu-transcribe = "src.transcribe:_cli_main"

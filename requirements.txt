@@ -1,0 +1,14 @@
+# Urdu Whisper Transcription – Python 3.11
+# Install via:  pip install -r requirements.txt
+#
+# Note: PyTorch must be installed separately (see setup_env.bat or README)
+# because the correct variant (CUDA vs CPU) depends on your hardware.
+
+tqdm>=4.65.0
+transformers>=4.40.0
+accelerate>=0.30.0
+librosa>=0.10.0
+soundfile>=0.12.1
+tf-keras>=3.0.0            # required because Transformers includes tf/keras integration code
+yt-dlp>=2024.0.0            # YouTube video/audio download
+python-docx>=1.1.0          # DOCX export support
