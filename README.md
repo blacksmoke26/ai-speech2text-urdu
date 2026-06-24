@@ -95,7 +95,7 @@ ffmpeg -version
 ## File Structure
 
 ```
-urdu-audio2text/
+ai-speech2text-urdu/
 │
 ├── src/
 │   ├── transcribe.py               ← Main transcription engine (~1500 lines)
@@ -161,7 +161,7 @@ This creates a virtual environment and installs all dependencies.
 
 #### Any Platform
 ```bash
-cd urdu-audio2text
+cd ai-speech2text-urdu
 python src/setup_env.py
 ```
 

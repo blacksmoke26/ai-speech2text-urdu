@@ -50,7 +50,7 @@ brew install ffmpeg
 ## Step 3: Setup the Project
 
 ```bash
-cd urdu-audio2text
+cd ai-speech2text-urdu
 
 # Create virtual environment and install dependencies (runs once)
 python src/setup_env.py
