@@ -319,10 +319,10 @@ class _ModelCache:
         if device_config:
             if device_config.lower() == "cpu":
                 # CPU: use float32 to avoid type mismatch issues
-                kwargs["torch_dtype"] = torch.float32
+                kwargs["dtype"] = torch.float32
             else:
                 # Auto-detect: force CPU (GPU disabled by config)
-                kwargs["torch_dtype"] = torch.float32
+                kwargs["dtype"] = torch.float32
 
         # Try loading from cache first (no network needed if cached)
         try:
@@ -345,6 +345,9 @@ class _ModelCache:
         # Clean leftover init params that leak into model.generate()
         if hasattr(cls._pipeline, '_forward_params'):
             cls._pipeline._forward_params.pop('local_files_only', None)
+            # Remove duplicate logits processor keys to silence transformers warnings
+            for key in ('suppress_tokens', 'bos_token_id', 'decoder_start_token_id'):
+                cls._pipeline._forward_params.pop(key, None)
         return cls._pipeline
 
 
