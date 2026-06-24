@@ -80,7 +80,10 @@ if _env_file.exists():
                 continue
             key, _, value = line.partition("=")
             key = key.strip()
-            value = value.strip()
+            # Strip inline comments (e.g., 'VALUE=10  # comment') and quotes
+            if '#' in value:
+                value = value[:value.index('#')]
+            value = value.strip().strip('"').strip("'").strip()
             if key and key not in os.environ:
                 # Preserve type hints for known keys
                 numeric_keys = {"CHUNK_DURATION_S", "CHUNK_OVERLAP_S", "MAX_AUDIO_BEFORE_SPLIT_S",
@@ -192,8 +195,12 @@ _alloc_label = f"{_APP_RAM_MB // 1024} GB" if _RAW_ALLOC_STR else f"auto ({_SYST
 print(f"[INFO] Memory: {_alloc_label} budget, {_APP_WORKER_MEM_MB // 1024} GB/worker")
 
 # ── Chunking for long-form audio (YouTube videos) ────────────────────
-CHUNK_DURATION_S = _env_float("CHUNK_DURATION_S", 55 if not _LOW_RAM_MODE else 30)
-CHUNK_OVERLAP_S = _env_float("CHUNK_OVERLAP_S", 3)
+# CHUNK_DURATION_S: Must be ≤ Whisper's default segment size (~30s) so each
+# ffmpeg chunk maps to ONE Whisper internal segment — no internal boundaries = no gaps.
+CHUNK_DURATION_S = _env_float("CHUNK_DURATION_S", 25 if not _LOW_RAM_MODE else 18)
+# CHUNK_OVERLAP_S: Generous overlap ensures tail-end losses from one chunk are
+# fully captured at the start of the next (Whisper is most reliable at segment starts).
+CHUNK_OVERLAP_S = _env_float("CHUNK_OVERLAP_S", 10)
 MAX_AUDIO_BEFORE_SPLIT_S = _env_int("MAX_AUDIO_BEFORE_SPLIT_S", 60)
 
 # Low-RAM overrides for chunking
@@ -522,25 +529,26 @@ def _resolve_device(device_flag: str | None) -> str | None:
 def _filter_garbage_repetition(text: str, max_repeat: int | None = None) -> str:
     """Remove excessive repetition artifacts from Whisper output.
     
-    Whisper can produce garbage like 'دور دور دور دور...' or '\ufeff\ufeff\ufeff'
-    when encountering silence, noise, or uncertain audio regions. This function
-    reduces runs of the same character/word to at most max_repeat consecutive copies.
+    WARNING: Only removes Unicode character repeats (like '\ufeff\ufeff...') that
+    are definite artifacts. The repeated-WORD filter is intentionally disabled
+    because Urdu speech commonly has legitimate word repetition for emphasis,
+    and removing it causes missing words.
     """
     if not text:
         return text
 
     max_repeat = max_repeat if max_repeat is not None else _env_int("REPEAT_THRESHOLD", 5)
 
-    # Fix 1: Collapse repeated Unicode characters (e.g., '\ufeff' padding, 'ﷺﷺﷺ...')
+    # Only collapse repeated Unicode control/padding characters — definite artifacts.
     def collapse_chars(s: str) -> str:
         result = []
         run_char = ""
         run_count = 0
         for ch in s:
-            if ch == run_char and ch != " ":  # skip spaces
+            if ch == run_char and ch != " ":
                 run_count += 1
                 if run_count > max_repeat:
-                    continue  # skip this char
+                    continue
             else:
                 run_char = ch
                 run_count = 1
@@ -549,25 +557,10 @@ def _filter_garbage_repetition(text: str, max_repeat: int | None = None) -> str:
 
     text = collapse_chars(text)
 
-    # Fix 2: Collapse repeated words (e.g., 'دعا دعا دعا دعا...') 
-    # but keep legitimate repetition (sentence structure may intentionally repeat words)
-    words = text.split()
-    if len(words) <= max_repeat:
-        return text
-
-    result_words = []
-    run_word = ""
-    run_count = 0
-    for w in words:
-        if w == run_word and w != "":
-            run_count += 1
-            if run_count > max_repeat:
-                continue
-        else:
-            run_word = w
-            run_count = 1
-        result_words.append(w)
-    return " ".join(result_words)
+    # Intentionally NOT filtering repeated words — legitimate Urdu speech often repeats
+    # words for emphasis (e.g., "ہاں ہاں", "نہیں نہیں") and we can't reliably distinguish
+    # this from Whisper artifacts. Better to have repetition than missing words.
+    return text
 
 
 def transcribe_single(
@@ -630,8 +623,13 @@ def transcribe_single(
         return None
     transcriber = _ModelCache._pipeline
 
-    # Force language on the pipeline
-    transcriber.model.generation_config.language = language
+    # Force language on the pipeline — map common aliases to full names
+    # that Whisper's tokenizer expects (e.g., "ur" -> "urdu").
+    lang_aliases = {"ur": "urdu", "en": "english", "hi": "hindi", "ar": "arabic",
+                    "es": "spanish", "fr": "french", "de": "german", "ja": "japanese",
+                    "ko": "korean", "zh": "chinese", "pt": "portuguese", "ru": "russian"}
+    lang_full = lang_aliases.get(language.lower(), language)
+    transcriber.model.generation_config.language = lang_full
 
     print(f"[2/4] Transcribing audio …")
     t_start = time.perf_counter()
@@ -649,7 +647,10 @@ def transcribe_single(
             dur = len(audio) / sr
             print(f"[INFO] {dur:.0f}s audio — transcibed via pipeline")
 
-        # Call the cached pipeline directly for aligned timestamps
+        # Call the cached pipeline directly for aligned timestamps.
+        # The ASR pipeline handles WhisperTimeStampLogitsProcessor internally
+        # when return_timestamps=True — no manual attachment needed.
+
         full_result = transcriber(
             audio,
             return_timestamps=True,
@@ -666,7 +667,12 @@ def transcribe_single(
                     "end": round(end_s, 3),
                     "text": c.get("text", "").strip(),
                 })
-            all_text_parts = [full_result.get("text", "")]
+            # Build text from individual chunk segments (reliable) instead of
+            # full_result["text"] which can be incomplete when Whisper doesn't
+            # predict end timestamps at chunk boundaries.
+            all_text_parts = [
+                c.get("text", "").strip() for c in full_result["chunks"] if c.get("text") and c.get("text").strip()
+            ]
         else:
             # Pipeline returned text but no chunks — create estimated segments
             txt = full_result.get("text", "") or ""
@@ -902,7 +908,7 @@ def transcribe_in_chunks(
         merged_text = " ".join(cleaned) if cleaned else ""
     else:
         from utils.audio_splitter import merge_text  # type: ignore
-        merged_text = merge_text([t if t else "" for t in chunk_texts])
+        merged_text = merge_text([t if t else "" for t in chunk_texts], overlap_s=CHUNK_OVERLAP_S)
 
     # ── Step 5: post-process & save ────────────────────────────────────────
     text = re.sub(r"[ \t]+", " ", merged_text).strip()
