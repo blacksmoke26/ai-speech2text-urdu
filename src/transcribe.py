@@ -976,6 +976,7 @@ def run_batch(
     use_cache: bool = True,
     workers: int = 1,
     auto_punctuate: bool = False,
+    auto_spell: bool = False,
 ) -> dict:
     """Process all audio files in a directory. Returns stats."""
 
@@ -1180,7 +1181,7 @@ def _dry_run_batch(directory: str, config: dict) -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _build_trans_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(add_help=False)
+    p = argparse.ArgumentParser(add_help=True, prog="transcribe.py trans")
     p.add_argument("audio", help="Audio file path (mp3, wav, flac, ogg, m4a, mp4, webm)")
     p.add_argument("--output", "-o", default=None, help="Output file path")
     p.add_argument("--format", "-f", choices=["txt", "json", "jsonl", "docx"], default="txt", help="Output format (default: txt)")
@@ -1198,7 +1199,7 @@ def _build_trans_parser() -> argparse.ArgumentParser:
 
 
 def _build_batch_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(add_help=False)
+    p = argparse.ArgumentParser(add_help=True, prog="transcribe.py batch")
     p.add_argument("directory", nargs="?", default=None, help="Directory to scan for audio files")
     p.add_argument("--format", "-f", choices=["txt", "json", "jsonl", "docx"], default="txt", help="Output format (default: txt)")
     p.add_argument("--language", "-l", default=None, help="Language code")
@@ -1265,6 +1266,10 @@ def _cli_main():
 
     # ── trans subcommand (single file) ─────────────────────────────────────
     if cmd == "trans":
+        if len(sys.argv) > 2 and sys.argv[2] in ("--help", "-h"):
+            parser = _build_trans_parser()
+            parser.print_help()
+            return
         parser = _build_trans_parser()
         args = parser.parse_args(sys.argv[2:])
         cfg = load_config()
@@ -1349,6 +1354,10 @@ def _cli_main():
 
     # ── batch subcommand ───────────────────────────────────────────────────
     if cmd == "batch":
+        if len(sys.argv) > 2 and sys.argv[2] in ("--help", "-h"):
+            parser = _build_batch_parser()
+            parser.print_help()
+            return
         parser = _build_batch_parser()
         args = parser.parse_args(sys.argv[2:])
         cfg = load_config()

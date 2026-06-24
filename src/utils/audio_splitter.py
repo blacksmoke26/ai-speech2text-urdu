@@ -188,21 +188,23 @@ def merge_text(chunk_texts: list[str]) -> str:
         return ""
 
     if len(chunk_texts) == 1:
-        return chunk_texts[0].strip()
+        t = chunk_texts[0]
+        return t.strip() if isinstance(t, str) else ""
 
     # Collapse last N words of each chunk (overlap region) to reduce duplication
     dedup_words = de_dup_words_threshold
     cleaned: list[str] = []
     for i, text in enumerate(chunk_texts):
-        if i < len(chunk_texts) - 1 and text.strip():
-            words = text.strip().split()
+        t = text if isinstance(text, str) else ""
+        if i < len(chunk_texts) - 1 and t.strip():
+            words = t.strip().split()
             if len(words) > dedup_words:
                 # Keep only first (len - dedup_words) words — overlap tail is dropped
                 cleaned.append(" ".join(words[:-dedup_words]))
             else:
-                cleaned.append(text.strip())
+                cleaned.append(t.strip())
         else:
-            cleaned.append(text.strip())
+            cleaned.append(t.strip())
 
     result = " ".join(cleaned).strip()
     # Collapse multiple spaces
