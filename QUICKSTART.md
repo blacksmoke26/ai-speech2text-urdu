@@ -13,7 +13,14 @@ Works on **Windows**, **Linux**, and **macOS** — GPU recommended but not requi
 
 ---
 
-## Step 1: Install Python 3.11
+## Step 1: Clone the Repo
+
+```bash
+git clone https://github.com/blacksmoke26/ai-speech2text-urdu.git
+cd ai-speech2text-urdu
+```
+
+## Step 2: Install Python 3.11
 
 ### Windows
 1. Download from https://www.python.org/downloads/release/python-3119/
@@ -32,7 +39,7 @@ brew install python@3.11
 python3.11 --version
 ```
 
-## Step 2: Install FFmpeg (for YouTube support)
+## Step 3: Install FFmpeg (for YouTube support)
 
 ### Windows
 Download from https://www.gyan.dev/ffmpeg/builds/, add `bin/` to PATH, verify with `ffmpeg -version`.
@@ -47,7 +54,7 @@ sudo apt install -y ffmpeg
 brew install ffmpeg
 ```
 
-## Step 3: Setup the Project
+## Step 4: Setup the Project
 
 ```bash
 cd ai-speech2text-urdu
@@ -58,14 +65,14 @@ python src/setup_env.py
 
 > ⏱ First run takes 5–15 minutes. The model (~1.6 GB) downloads automatically on first transcription.
 
-## Step 4: Activate the Virtual Environment
+## Step 5: Activate the Virtual Environment
 
 ```bash
 venv\Scripts\activate          # Windows
 source venv/bin/activate       # Linux / macOS
 ```
 
-## Step 5: Transcribe Your First File
+## Step 6: Transcribe Your First File
 
 ```bash
 # Basic Urdu transcription
@@ -92,7 +99,7 @@ python src/transcribe.py trans audio.mp3 --dry-run
 
 A `.txt` file with the same name appears next to your audio file.
 
-## Step 6: Transcribe YouTube Videos (Optional)
+## Step 7: Transcribe YouTube Videos (Optional)
 
 ```bash
 # Default Urdu transcription
@@ -105,7 +112,7 @@ python src/youtube_transcribe.py URL -l en -f json
 python src/youtube_transcribe.py URL --chunk 45
 ```
 
-## Step 7: Batch Process a Folder
+## Step 8: Batch Process a Folder
 
 ```bash
 # All files in folder (recursively)

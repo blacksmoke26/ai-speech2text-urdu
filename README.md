@@ -133,6 +133,13 @@ ai-speech2text-urdu/
 
 ## Step-by-Step Setup
 
+### Step 0: Clone the Repo
+
+```bash
+git clone https://github.com/blacksmoke26/ai-speech2text-urdu.git
+cd ai-speech2text-urdu
+```
+
 ### Step 1: Install Python 3.11
 
 #### Windows
